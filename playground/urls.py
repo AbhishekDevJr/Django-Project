@@ -8,4 +8,5 @@ urlpatterns = [
     path('current-time/', views.current_time),
     path('get-all-movies/', views.get_movie_list),
     path('add-get-movies/', views.add_view_movies),
+    path('movie-details/<int:id>', views.movie_details),
 ]
