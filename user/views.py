@@ -36,7 +36,8 @@ def user_register(request):
         print('Error opening %s: %s' % (value.filename, value.strerror))
         return Response({
             "title" : "Unhandled Server Exception",
-            "message": "Unhandled Server Exception occurred on the Server."
+            "message": "Unhandled Server Exception occurred on the Server.",
+            "errors" : serializedData.errors
         }, status = status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 @api_view(['POST'])
