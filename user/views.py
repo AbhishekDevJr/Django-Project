@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .serializers import UserSerializer, AuthenticationSerializer
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.authtoken.models import Token
 import sys
 
 # Create your views here.
@@ -49,11 +50,25 @@ def user_authentication(request):
             
             if user is not None:
                 login(request, user)
-                return Response({
+                token, created = Token.objects.get_or_create(user = user)
+                
+                response = Response({
                     "title" : "User Authenticated",
                     "message" : "User Successfully Authenticated",
-                    "username" : username
+                    "username" : username,
+                    'token' : token.key
                 }, status = status.HTTP_200_OK)
+                
+                response.set_cookie(
+                    key = "Authorization",
+                    value = f"Token {token.key}",
+                    httponly=True,
+                    secure=False,
+                    samesite="Lax",
+                    max_age=60 * 60
+                )
+                
+                return response
             else:
                 return Response({
                     "title" : "User Auth Failed",
