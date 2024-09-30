@@ -9,7 +9,8 @@ from django.contrib.auth import authenticate, login, logout
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import AuthenticationFailed
-import sys
+from django.contrib.auth.models import User
+from .serializers import UserSerializer
 import logging
 
 # Create your views here.
@@ -33,9 +34,7 @@ def user_register(request):
                 "errors" : serializedData.errors
             }, status = status.HTTP_400_BAD_REQUEST)
         
-    except IOError:
-        type, value, traceback = sys.exc_info()
-        print('Error opening %s: %s' % (value.filename, value.strerror))
+    except Exception as e:
         return Response({
             "title" : "Unhandled Server Exception",
             "message": "Unhandled Server Exception occurred on the Server.",
@@ -93,14 +92,19 @@ def user_authentication(request):
 
 @csrf_exempt
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def user_logout(request):
     try:
         logout(request)
-        return Response({
+        
+        response = Response({
             "title" : "User Logout Successfull",
             "message" : "User Successfully Logged Out."
         }, status = status.HTTP_200_OK)
+        response.delete_cookie('csrftoken')
+        response.delete_cookie('Authorization')
+        
+        return response 
     except Exception as e:
         print(f"Logout Error String------> {str(e)}")
         return Response({
@@ -112,40 +116,47 @@ logger = logging.getLogger(__name__)
 
 @csrf_exempt
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def verify_user(request):
     try:
-        logger.info(f"Request received: {request.COOKIES}")
-        print(request.header)
-        print(f"Request Cookies: {request.COOKIES}")
         token_key = request.COOKIES.get('Authorization')
-        
         if not token_key:
-            raise AuthenticationFailed('Token Not Found in Cookies.')
-        
-        try:
+            return Response({
+                "title" : "User Unauthenticated",
+                "message" : "User is not Authenticated",
+            }, status = status.HTTP_200_OK)
+        else:
             token_key = token_key.replace('Token ', '')
-            print(f"Token ----------------> {token_key}")
             token = Token.objects.get(key = token_key)
             user = token.user
-        except Token.DoesNotExist:
-            raise AuthenticationFailed('Invalid Token')
-        
-        return Response({
-            "title" : "User Authenticated",
-            "message" : "User is Authenticated",
-            "username" : user.username
-        }, status = status.HTTP_200_OK)
-        
-    except AuthenticationFailed as e:
-        print(f"Request Cookies: {str(e)}")
-        return Response({
-            "title": "Authentication Failed",
-            "message": str(e),
-        }, status=status.HTTP_401_UNAUTHORIZED)
-        
+            print(f"Request Cookies: {request.COOKIES} {token_key} {user}")
+            if not token_key:
+                    raise AuthenticationFailed('Token Not Found in Cookies.')
+            else:
+                return Response({
+                    "title" : "User Authenticated",
+                    "message" : "User is Authenticated",
+                    "username" : user.username
+                }, status = status.HTTP_200_OK)
     except Exception as e:
         return Response({
              "title" : "Unhandled Server Exception",
-            "message": "Unhandled Server Exception occurred on the Server."
+            "message": "Unhandled Server Exception occurred on the Server." + str(e)
+        }, status = status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+@csrf_exempt
+@api_view(['GET'])
+def get_all_users(request):
+    try:
+        users = User.objects.all()
+        usersSerializedData = UserSerializer(users, many = True)
+        return Response({
+            "title" : "User Data",
+            "message": "Registered User Data.",
+            "data" : usersSerializedData.data
+        })
+    except Exception as e:
+        return Response({
+            "title" : "Unhandled Server Exception",
+            "message": "Unhandled Server Exception occurred on the Server. " + str(e)
         }, status = status.HTTP_500_INTERNAL_SERVER_ERROR)
