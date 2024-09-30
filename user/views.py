@@ -160,3 +160,37 @@ def get_all_users(request):
             "title" : "Unhandled Server Exception",
             "message": "Unhandled Server Exception occurred on the Server. " + str(e)
         }, status = status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+@csrf_exempt
+@api_view(['POST'])
+def update_user(request):
+    try:
+        email = request.data.get('email')
+        updatedData = request.data.copy()
+        if not email:
+            return Response({
+            "title" : "Bad Request",
+            "message": "Bad Request Payload."
+        }, status = status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user = User.objects.get(email = email)
+        except:
+            return Response({
+            "title" : "Bad Request",
+            "message": "Bad Request Payload."
+        }, status = status.HTTP_400_BAD_REQUEST)
+            
+        serializedData = UserSerializer(user, data = updatedData, partial = True)
+        
+        if serializedData.is_valid():
+            serializedData.save()
+            return Response({'message': 'User updated successfully', 'data': serializedData.data}, status=status.HTTP_200_OK)
+        
+        return Response(serializedData.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    except Exception as e:
+        return Response({
+            "title" : "Unhandled Server Exception",
+            "message": "Unhandled Server Exception occurred on the Server. " + str(e)
+        }, status = status.HTTP_500_INTERNAL_SERVER_ERROR)
