@@ -9,4 +9,5 @@ urlpatterns = [
     path('verify-auth/', views.verify_user),
     path('get-user-data/', views.get_all_users),
     path('update-user/', views.update_user),
+    path('delete-user/', views.delete_user),
 ]

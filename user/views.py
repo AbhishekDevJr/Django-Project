@@ -194,3 +194,27 @@ def update_user(request):
             "title" : "Unhandled Server Exception",
             "message": "Unhandled Server Exception occurred on the Server. " + str(e)
         }, status = status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+@csrf_exempt
+@api_view(['DELETE'])
+def delete_user(request):
+    try:
+        try:
+            user = User.objects.get(email = request.data.get('email'))
+            user.delete()
+            return Response({
+                "title" : "User Deleted",
+                "message" : "User Deleted Successfully!",
+                "user" : request.data.get('email')
+            })
+        except Exception as e:
+            return Response({
+                "title" : "User Not Found or Multiple Users Found",
+                "message" : "Either no User was found or Multiple users were found."
+            }, status = status.HTTP_400_BAD_REQUEST)
+            
+    except Exception as e:
+        return Response({
+            "title" : "Unhandled Server Exception",
+            "message": "Unhandled Server Exception occurred on the Server. " + str(e)
+        },status = status.HTTP_500_INTERNAL_SERVER_ERROR)
