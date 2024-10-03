@@ -43,11 +43,12 @@ INSTALLED_APPS = [
     'vege',
     'user',
     'corsheaders',
-    'blog'
+    'blog',
+    'expense'
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  # First
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
