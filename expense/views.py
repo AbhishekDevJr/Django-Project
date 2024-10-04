@@ -1,16 +1,53 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from .serializers import ExpenseSerializer
+from rest_framework import status
+import uuid
+import datetime
 
 # Create your views here.
 
 @api_view(['POST'])
 def create_expense(request):
     try:
-        pass
+        if request.data:
+            expense = request.data.copy()
+            expense['expenseId'] = uuid.uuid4()
+            expense['creationDate'] = datetime.datetime.now()
+            serializedData = ExpenseSerializer(data = expense)
+            
+            if serializedData.is_valid():
+                serializedData.save()
+                return Response({
+                    "title" : "Expense Created",
+                    "message" : "Expense Record created in DataBase.",
+                    "data" : serializedData.data
+                }, status = status.HTTP_201_CREATED)
+            else:
+                return Response({
+                    "title" : "Request Data is Invalid",
+                    "message" : "Requested expense data Invalid."
+                }, status = status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({
+                "title" : "Bad Request",
+                "message" : "Bad Request Payload."
+            }, status = status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response({
             "title" : "Server Error",
             "message" : "Unhandled Server Error",
             "error" : str(e)
-        })
+        }, status = status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+@api_view(['GET', 'POST'])
+def get_expense(request):
+    try:
+        pass
+    except Exception as e:
+        return Response({
+             "title" : "Server Error",
+            "message" : "Unhandled Server Error",
+            "error" : str(e)
+        }, status = status.HTTP_500_INTERNAL_SERVER_ERROR)

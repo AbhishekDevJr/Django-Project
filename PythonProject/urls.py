@@ -24,4 +24,5 @@ urlpatterns = [
     path('playground/', include('playground.urls')),
     path('user/', include('user.urls')),
     path('blog/', include('blog.urls')),
+    path('expense/', include('expense.urls'),)
 ]
