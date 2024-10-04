@@ -3,6 +3,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializers import ExpenseSerializer
 from rest_framework import status
+from .models import Expense
+from .serializers import ExpenseSerializer
 import uuid
 import datetime
 
@@ -44,7 +46,21 @@ def create_expense(request):
 @api_view(['GET', 'POST'])
 def get_expense(request):
     try:
-        pass
+        if request.data:
+            pass
+        else:
+            expenses = Expense.objects.all()
+            if expenses:
+                return Response({
+                    "title" : "Total Expenses",
+                    "message" : "Total Expense on the Server.",
+                    "data" : ExpenseSerializer(expenses, many = True).data
+                }, status = status.HTTP_200_OK)
+            else:
+                return Response({
+                    "title" : "No Expense Found",
+                    "message" : "No Expense Found"
+                }, status = status.HTTP_200_OK)
     except Exception as e:
         return Response({
              "title" : "Server Error",
