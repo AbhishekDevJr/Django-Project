@@ -100,3 +100,63 @@ def get_expense(request):
             "message" : "Unhandled Server Error",
             "error" : str(e)
         }, status = status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+@api_view(['POST'])
+def update_expense(request):
+    try:
+        if request.data.get('expenseId'):
+            expense = Expense.objects.filter(expenseId = request.data.get('expenseId'))
+            if len(expense):
+                expense.update(**request.data)
+                return Response({
+                    "title" : "Expense Updated",
+                    "message" : "Requested Expense has been Updated.",
+                    "data" : ExpenseSerializer(expense, many = True).data
+                })
+            else:
+                return Response({
+                    "title" : "Invalid Expense ID",
+                    "message" : "Invalid Expense ID",
+                    "expenseId" : request.data.get('expenseId')
+                }, status = status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({
+                "title" : "Bad Request",
+                "message" : "Bad Request Payload."
+            }, status = status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({
+            "title" : "Server Error",
+            "message" : "Unhandled Server Error",
+            "error" : str(e)
+        }, status = status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+@api_view(['DELETE'])
+def delete_expense(request):
+    try:
+        if bool(request.data.get('expenseId')):
+            expense = Expense.objects.filter(expenseId = request.data.get('expenseId'))
+            
+            if len(expense):
+                expense.delete()
+                return Response({
+                    "title" : "Expense Deleted Successfully",
+                    "message" : "Requested Expense has been deleted successfully.",
+                    "expenseId" : request.data.get('expenseId')
+                }, status = status.HTTP_200_OK)
+            else:
+                return Response({
+                    "title" : "Invalid Expense ID",
+                    "message" : "Requested Expense ID is Invalid."
+                }, status = status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({
+                "title" : "Bad Request",
+                "message" : "Expense Id needs to be provide to delete an Expense.",
+            }, status = status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({
+            "title" : "Server Error",
+            "message" : "Unhandled Server Error",
+            "error" : str(e)
+        }, status = status.HTTP_500_INTERNAL_SERVER_ERROR)
