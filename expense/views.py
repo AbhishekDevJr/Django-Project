@@ -46,9 +46,42 @@ def create_expense(request):
 @api_view(['GET', 'POST'])
 def get_expense(request):
     try:
-        if request.data:
-            pass
-        else:
+        if request.method == 'POST':
+            if request.data.get('filters'):
+                filters = request.data.get("filters")
+                allExpenses = Expense.objects.all()
+                
+                if bool(filters.get('date')):
+                    date = filters.get('date')
+                    allExpenses = allExpenses.filter(expenseDate__range = (date.get('from'), date.get('to')))
+
+                if bool(filters.get('expStatus')):
+                    expStatus = filters.get('expStatus')
+                    allExpenses = allExpenses.filter(status = expStatus)
+                    
+                if bool(filters.get('currency')):
+                    currency = filters.get('currency')
+                    allExpenses = allExpenses.filter(currency = currency)
+                    
+                if len(allExpenses):
+                    return Response({
+                    "title" : "Expense Data",
+                    "message" : "Filtered Expense Data.",
+                    "date" : ExpenseSerializer(allExpenses, many = True).data
+                }, status = status.HTTP_200_OK)
+                else:
+                    return Response({
+                    "title" : "No Data Found",
+                    "message" : "No Data matching your criteria Found.",
+                    "date" : []
+                }, status = status.HTTP_200_OK)
+                
+            else:
+                return Response({
+                    "title" : "Bad Request",
+                    "message" : "Bad Request Payload"
+                }, status = status.HTTP_400_BAD_REQUEST)
+        elif request.method == 'GET':
             expenses = Expense.objects.all()
             if expenses:
                 return Response({
